@@ -52,6 +52,7 @@ jobs:
       env:
         SHEET_ID: ${{ secrets.SHEET_ID }}
         SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        OUTPUT_FILENAME: ${{ secrets.OUTPUT_FILENAME }}
       run: python .github/scripts/export_sheet.py
 
     - name: 📤 Commit and push changes
@@ -59,6 +60,6 @@ jobs:
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
-        git add data.csv
-        git commit -m "Update data.csv from Google Sheet" || echo "No changes to commit"
+        git add *.csv
+        git commit -m "Update CSV from Google Sheet" || echo "No changes to commit"
         git push
