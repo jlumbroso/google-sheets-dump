@@ -1,0 +1,37 @@
+name: Google Sheet to CSV
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  export_sheet:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install gspread oauth2client
+
+    - name: Export Google Sheet to CSV
+      env:
+        SHEET_ID: ${{ secrets.SHEET_ID }}
+        SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+      run: python .github/scripts/export_sheet.py
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add data.csv
+        git commit -m "Update data.csv from Google Sheet" || echo "No changes to commit"
+        git push
