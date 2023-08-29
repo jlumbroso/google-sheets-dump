@@ -1,34 +1,61 @@
-name: Google Sheet to CSV
+name: 📊 Google Sheet to CSV
 
 on:
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
+  
+  # Schedule the workflow to run at a specific time using cron syntax
+  schedule:
+    # Example: Run at 03:00 AM every day.
+    # Modify the cron expression as needed.
+    # Use https://crontab.guru/ to generate and understand cron expressions.
+    - cron: "0 3 * * *"
 
 jobs:
   export_sheet:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: 🔍 Check if secrets are set
+      id: check-secrets
+      env:
+        SHEET_ID: ${{ secrets.SHEET_ID }}
+        SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+      run: |
+        if [[ -z "$SHEET_ID" || -z "$SERVICE_ACCOUNT_JSON" ]]; then
+          echo "One or both secrets are not set. Skipping further steps."
+          echo "::set-output name=skip::true"
+        else
+          echo "::set-output name=skip::false"
+        fi
+
+    - name: 📥 Checkout repository
+      if: steps.check-secrets.outputs.skip == 'false'
       uses: actions/checkout@v2
 
-    - name: Set up Python
+    - name: 🐍 Set up Python
+      if: steps.check-secrets.outputs.skip == 'false'
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
 
-    - name: Install dependencies
+    - name: 📦 Install dependencies
+      if: steps.check-secrets.outputs.skip == 'false'
       run: |
-        pip install gspread oauth2client
+        pip install gspread oauth2client loguru
 
-    - name: Export Google Sheet to CSV
+    - name: 🚀 Export Google Sheet to CSV
+      if: steps.check-secrets.outputs.skip == 'false'
       env:
         SHEET_ID: ${{ secrets.SHEET_ID }}
         SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
       run: python .github/scripts/export_sheet.py
 
-    - name: Commit and push changes
+    - name: 📤 Commit and push changes
+      if: steps.check-secrets.outputs.skip == 'false'
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
